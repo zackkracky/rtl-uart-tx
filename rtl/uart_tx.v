@@ -31,11 +31,42 @@ module uart_tx #(
             bit_counter  <= 3'd0;
             shift_reg    <= 8'd0;
 
+            tx   <= 1'b1;
+            busy <= 1'b0;
+            done <= 1'b0;
 
         end
         else begin
 
+            done <= 1'b0;
+            case(state)
 
+                IDLE :begin
+                    tx = 1'b1;
+                    busy = 1'b0;
+                    baud_counter <= 16'd0;
+                    bit_counter <= 3'd0;
+
+                    if (tx_start)begin
+                        
+                        shift_reg <= tx_data;
+                        busy <= 1'b1;
+                        state <= START;
+
+                    end
+
+                end
+                START:begin
+                
+                end
+                DATA :begin
+                
+                end
+                STOP :begin
+
+                end
+
+            endcase
 
         end
 
