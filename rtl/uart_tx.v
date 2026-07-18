@@ -57,7 +57,18 @@ module uart_tx #(
 
                 end
                 START:begin
-                
+                    tx = 1'b0;
+
+                    if (baud_counter < CLCLKS_PER_BIT-1) begin
+                        baud_counter <= baud_counter + 1;
+                    end
+                    else begin
+                        baud_counter <= 16'd0;
+                        state <= DATA;
+                    end
+
+
+
                 end
                 DATA :begin
                 
