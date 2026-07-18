@@ -19,7 +19,7 @@ module uart_tx #(
     localparam STOP = 2'b11;
 
     reg [1:0] state;
-    reg [15:0] baud_counter;
+    reg [8:0] baud_counter;
     reg [2:0] bit_counter;
     reg [7:0] shift_reg; 
     
@@ -27,7 +27,7 @@ module uart_tx #(
 
         if (!rst_n) begin
             state   <= IDLE;
-            baud_counter <= 16'd0;
+            baud_counter <= 9'd0;
             bit_counter  <= 3'd0;
             shift_reg    <= 8'd0;
 
@@ -44,7 +44,7 @@ module uart_tx #(
                 IDLE :begin
                     tx = 1'b1;
                     busy = 1'b0;
-                    baud_counter <= 16'd0;
+                    baud_counter <= 9'd0;
                     bit_counter <= 3'd0;
 
                     if (tx_start)begin
@@ -63,15 +63,32 @@ module uart_tx #(
                         baud_counter <= baud_counter + 1;
                     end
                     else begin
-                        baud_counter <= 16'd0;
+                        baud_counter <= 9'd0;
                         state <= DATA;
                     end
-
-
-
                 end
                 DATA :begin
-                
+                    
+                    tx <= shift_reg[0];
+
+                    if(baud_counter < CLKS_PER_BIT - 1) begin
+                        baud_counter <= baud_counter + 1;
+                    end
+                    else begin
+                        baud_counter <= 9'd0;
+
+                        shfit_reg <= shift_reg >> 1;
+
+                        if (bit_counter < 3'd7) begin
+                            bit_counter <= bit_counter + 1;
+                        end
+                        else begin
+                            bit_counter <= 3'd0;
+                            state <= STOP;
+                        end
+
+                    end
+
                 end
                 STOP :begin
 
