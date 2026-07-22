@@ -1,5 +1,5 @@
 module uart_tx #(
-        parameter CLK_FREQ = 50_000_000;
+        parameter CLK_FREQ = 50_000_000,
         parameter BAUD_RATE = 115200
     )(
         input wire  clk,
@@ -22,6 +22,8 @@ module uart_tx #(
     reg [8:0] baud_counter;
     reg [2:0] bit_counter;
     reg [7:0] shift_reg; 
+
+    wire baud_tick = (baud_counter == CLKS_PER_BIT - 1);
     
     always @(posedge clk or negedge rst_n)begin
 
@@ -42,8 +44,8 @@ module uart_tx #(
             case(state)
 
                 IDLE :begin
-                    tx = 1'b1;
-                    busy = 1'b0;
+                    tx <= 1'b1;
+                    busy <= 1'b0;
                     baud_counter <= 9'd0;
                     bit_counter <= 3'd0;
 
@@ -59,38 +61,49 @@ module uart_tx #(
                 START:begin
                     tx = 1'b0;
 
-                    if (baud_counter < CLCLKS_PER_BIT-1) begin
-                        baud_counter <= baud_counter + 1;
-                    end
-                    else begin
+                    if (baud_tick) begin
                         baud_counter <= 9'd0;
                         state <= DATA;
+                    end
+                    else begin
+                        baud_counter <= baud_counter + 1;
                     end
                 end
                 DATA :begin
                     
                     tx <= shift_reg[0];
 
-                    if(baud_counter < CLKS_PER_BIT - 1) begin
+                    if(baud_tick) begin
                         baud_counter <= baud_counter + 1;
-                    end
-                    else begin
-                        baud_counter <= 9'd0;
-
                         shfit_reg <= shift_reg >> 1;
+                    end
 
                         if (bit_counter < 3'd7) begin
-                            bit_counter <= bit_counter + 1;
-                        end
-                        else begin
                             bit_counter <= 3'd0;
                             state <= STOP;
                         end
-
+                        else begin
+                            bit_counter <= 3'd0;
+                        end
+                    else begin
+                        baud_counter <= baud_counter + 1;
                     end
 
                 end
                 STOP :begin
+
+                    tx = 1'b1;
+
+                    if (baud_tick)begin
+                        baud_counter <= 9'd0;
+                        busy         <= 1'b0;
+                        done         <= 1'b1;
+                        state        <= IDLE;
+
+                    end
+                    else begin
+                        baud_counter <= baud_counter + 1;
+                    end
 
                 end
 
