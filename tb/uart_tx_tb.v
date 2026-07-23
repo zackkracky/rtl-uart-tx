@@ -50,6 +50,15 @@ module uart_tx_tb;
         end
     endtask
 
+    task test_basic;
+        begin
+            
+            $display("\nRunning Basic Test");
+            send_byte(8'hAA);
+
+        end
+    endtask
+
     intial begin
 
         $dumpfile("uart_tx.vcd");
@@ -64,13 +73,8 @@ module uart_tx_tb;
         rst_n    = 1'b1; 
 
         send_byte(8'h53);
-        @(posedge done);
-
         send_byte(8'hAA);
-        @(posedge done);
-
         send_byte(8'h83);
-        @(posedge done);
 
         $finish;
     end
