@@ -59,7 +59,7 @@ module uart_tx #(
 
                 end
                 START:begin
-                    tx = 1'b0;
+                    tx <= 1'b0;
 
                     if (baud_tick) begin
                         baud_counter <= 9'd0;
@@ -74,17 +74,17 @@ module uart_tx #(
                     tx <= shift_reg[0];
 
                     if(baud_tick) begin
-                        baud_counter <= baud_counter + 1;
-                        shfit_reg <= shift_reg >> 1;
-                    end
+                        baud_counter <= 9'd0;
+                        shift_reg <= shift_reg >> 1;
 
-                        if (bit_counter < 3'd7) begin
+                        if (bit_counter == 3'd7) begin
                             bit_counter <= 3'd0;
                             state <= STOP;
                         end
                         else begin
-                            bit_counter <= 3'd0;
+                            bit_counter <= bit_counter + 1;
                         end
+                    end
                     else begin
                         baud_counter <= baud_counter + 1;
                     end
@@ -92,7 +92,7 @@ module uart_tx #(
                 end
                 STOP :begin
 
-                    tx = 1'b1;
+                    tx <= 1'b1;
 
                     if (baud_tick)begin
                         baud_counter <= 9'd0;
@@ -105,6 +105,11 @@ module uart_tx #(
                         baud_counter <= baud_counter + 1;
                     end
 
+                end
+                default: begin
+                    state <= IDLE;
+                    baud_counter <= 9'd0;
+                    bit_counter  <=3'd0; 
                 end
 
             endcase
