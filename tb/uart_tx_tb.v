@@ -34,12 +34,19 @@ module uart_tx_tb;
     task send_byte;
         input [7:0] data;
         begin
+            wait(!busy);
+
             tx_data = data;
             tx_start = 1'b1;
 
             @(posedge clk);
 
             tx_start = 1'b0;
+
+            @(posedge clk);
+
+            $display("[%0t ns] Sent byte: 0x%02h", $time, data);
+
         end
     endtask
 
